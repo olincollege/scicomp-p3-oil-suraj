@@ -26,25 +26,35 @@ def predict_raw_ridge(model, scaler, test, lag=6):
     return scaler.inverse_transform(y), scaler.inverse_transform(pred_norm)
 
 
-def train_decomposed_ridge(imfs, residue, lag=6):
-    """
-    Train one Ridge model per component.
+def train_decomposed_ridge(imfs, residue, val_imfs, val_residue, lag=6):
+    """Train one Ridge per component, tuning alpha on validation set."""
+    from evaluate import rmse
 
-    Takes the ICEEMDAN output (imfs array and residue), normalizes each
-    component independently, creates lag windows, fits Ridge.
-
-    Returns list of (model, scaler) tuples, one per component.
-    """
-    components = list(imfs) + [residue]
+    train_components = list(imfs) + [residue]
+    val_components = list(val_imfs) + [val_residue]
     fitted = []
+    alphas = [0.001, 0.005, 0.01, 0.05, 0.1, 0.2]  # paper's range: [0.001, 0.2]
 
-    for comp in components:
+    for i, comp in enumerate(train_components):
         scaler = MinMaxScaler()
         norm = scaler.fit_transform(comp)
-        X, y = create_windows(norm, lag=lag)
-        model = Ridge(alpha=1.0)
-        model.fit(X, y)
+        X_tr, y_tr = create_windows(norm, lag=lag)
+
+        val_norm = scaler.transform(val_components[i])
+        X_val, y_val = create_windows(val_norm, lag=lag)
+
+        best_alpha, best_score = 1.0, float('inf')
+        for a in alphas:
+            m = Ridge(alpha=a)
+            m.fit(X_tr, y_tr)
+            score = rmse(y_val, m.predict(X_val))
+            if score < best_score:
+                best_alpha, best_score = a, score
+
+        model = Ridge(alpha=best_alpha)
+        model.fit(X_tr, y_tr)
         fitted.append((model, scaler))
+        print(f"    Component {i+1}: alpha={best_alpha}")
 
     return fitted
 
