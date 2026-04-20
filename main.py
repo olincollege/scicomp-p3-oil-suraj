@@ -28,7 +28,14 @@ def main():
     print()
 
     print("Training Ridge models per component")
-    fitted = train_decomposed_ridge(train_imfs, train_residue, lag=6)
+    print(f"Decomposing validation data (n_realizations={N_REAL})")
+    val_imfs, val_residue = iceemdan(val, max_imfs=11, noise_std=0.05,
+                                      n_realizations=N_REAL, seed=42)
+    print(f"  {len(val_imfs)} IMFs + 1 residue")
+    print()
+
+    fitted = train_decomposed_ridge(train_imfs, train_residue,
+                                     val_imfs, val_residue, lag=6)
     print(f"  {len(fitted)} models trained")
 
     print("Training raw Ridge (no decomposition)")
@@ -36,7 +43,7 @@ def main():
     print()
 
     print(f"Decomposing test data (n_realizations={N_REAL})")
-    test_imfs, test_residue = iceemdan(test, max_imfs=11, noise_std=0.08,
+    test_imfs, test_residue = iceemdan(test, max_imfs=11, noise_std=0.05,
                                         n_realizations=N_REAL, seed=42)
     print(f"  {len(test_imfs)} IMFs + 1 residue")
     print()
@@ -66,7 +73,7 @@ def main():
     print(f"  {'Raw Ridge (no decomp)':<28} {raw_mape:>7.4f}% {raw_rmse:>7.4f}")
     print(f"  {'ICEEMDAN+RR (yours)':<28} {ice_mape:>7.4f}% {ice_rmse:>7.4f}")
     print(f"  {'-'*28} {'-'*8} {'-'*8}")
-    print(f"  {'ICEEMDAN and RR (paper)':<28} {'~0.43%':>8} {'~0.66':>8}")
+    print(f"  {'ICEEMDAN and RR (paper)':<28} {'~0.43%':>8} {'~0.34':>8}")
     print()
 
     print("Saving plots")
