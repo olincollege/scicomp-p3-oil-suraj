@@ -16,24 +16,25 @@ from scipy.interpolate import CubicSpline
 
 
 def find_extrema(signal):
+   # Find local maxima and minima using vectorized NumPy comparison. Endpoints mirrored into both lists for spline boundary stability.
     N = len(signal)
-    maxima = []
-    minima = []
-
-    for i in range(1, N - 1):
-        if signal[i - 1] < signal[i] and signal[i] > signal[i + 1]:
-            maxima.append(i)
-        elif signal[i - 1] > signal[i] and signal[i] < signal[i + 1]:
-            minima.append(i)
+    d = np.diff(signal)
+    sign_d = np.sign(d)
+    nonzero = sign_d != 0
+    if np.any(nonzero):
+        idx = np.where(nonzero, np.arange(len(sign_d)), 0)
+        np.maximum.accumulate(idx, out=idx)
+        sign_d = sign_d[idx]
+    sign_changes = np.diff(sign_d)
+    maxima = np.where(sign_changes < 0)[0] + 1
+    minima = np.where(sign_changes > 0)[0] + 1
 
     if len(maxima) > 0:
-        maxima.insert(0, 0)
-        maxima.append(N - 1)
+        maxima = np.concatenate(([0], maxima, [N - 1]))
     if len(minima) > 0:
-        minima.insert(0, 0)
-        minima.append(N - 1)
+        minima = np.concatenate(([0], minima, [N - 1]))
 
-    return np.array(maxima, dtype=int), np.array(minima, dtype=int)
+    return maxima.astype(int), minima.astype(int)
 
 
 def make_envelopes(signal):
