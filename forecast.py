@@ -77,15 +77,6 @@ def train_decomposed_ridge(imfs, residue, val_imfs, val_residue, lag=6):
                     best_alpha, best_score = a, score
         else:
             best_alpha = 0.01
-        X_val, y_val = create_windows(val_norm, lag=lag)
-
-        best_alpha, best_score = 1.0, float('inf')
-        for a in alphas:
-            m = Ridge(alpha=a)
-            m.fit(X_tr, y_tr)
-            score = rmse(y_val, m.predict(X_val))
-            if score < best_score:
-                best_alpha, best_score = a, score
 
         model = Ridge(alpha=best_alpha)
         model.fit(X_tr, y_tr)
