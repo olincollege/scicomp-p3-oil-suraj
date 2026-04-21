@@ -2,10 +2,6 @@
 
 ![ICEEMDAN Decomposition of WTI Crude Oil Prices](readmeimages/decomposition.png)
 
-Prelemimnary README.
-
-# scicomp-p3-oil-suraj
-Paper: Li, T., Zhou, Y., Li, X., Wu, J., &amp; He, T. (2019). "Forecasting Daily Crude Oil Prices Using Improved CEEMDAN and Ridge Regression-Based Predictors." Energies, 12(19), 3603. Link: https://www.mdpi.com/1996-1073/12/19/3603
 
 Suraj Sajjala — Scientific Computing Project 3
 
@@ -62,7 +58,7 @@ EMD repeats this for each successive residue until no more oscillatory component
 ## How to Run
 
 ```bash
-pip install numpy pandas scipy scikit-learn matplotlib
+pip install -r requirements.txt
 python main.py
 ```
 
