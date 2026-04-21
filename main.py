@@ -18,7 +18,7 @@ def main():
     print()
 
     print(f"Decomposing training data (n_realizations={N_REAL})")
-    train_imfs, train_residue = iceemdan(train, max_imfs=11, noise_std=0.08,
+    train_imfs, train_residue = iceemdan(train, max_imfs=11, noise_std=0.05,
                                           n_realizations=N_REAL, seed=42)
     print(f"  {len(train_imfs)} IMFs + 1 residue")
 
