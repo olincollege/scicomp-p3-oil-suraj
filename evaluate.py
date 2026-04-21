@@ -1,11 +1,13 @@
 """
 evaluate.py — Forecast evaluation metrics.
-
-MAPE: How far off in percentage terms? Lower is better.
-      Paper's ICEEMDAN+RR achieves ~0.43%.
-
-RMSE: How far off in dollars, penalizing big misses? Lower is better.
-      Paper achieves ~$0.66.
+ 
+MAPE (Mean Absolute Percentage Error):
+    How far off in percentage terms. Lower is better.
+ 
+RMSE (Root Mean Square Error):
+    How far off in dollars, penalizing large misses. Lower is better.
+ 
+Both metrics are defined.
 """
 
 import numpy as np

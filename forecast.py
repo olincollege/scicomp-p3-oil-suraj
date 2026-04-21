@@ -1,3 +1,15 @@
+"""
+forecast.py — Forecasting models for ICEEMDAN-decomposed oil prices.
+ 
+Three models:
+    random_walk:              naive baseline (tomorrow = today)
+    train/predict_raw_ridge:  Ridge on raw prices (no decomposition)
+    train/predict_decomposed: one Ridge per ICEEMDAN component with
+                              per-component alpha tuning on validation set
+ 
+The decomposed approach follows the paper's Stage 2 (individual forecasting)
+and Stage 3 (ensemble by addition).
+"""
 import numpy as np
 from sklearn.linear_model import Ridge
 from data import MinMaxScaler, create_windows
@@ -27,7 +39,20 @@ def predict_raw_ridge(model, scaler, test, lag=6):
 
 
 def train_decomposed_ridge(imfs, residue, val_imfs, val_residue, lag=6):
-    """Train one Ridge per component, tuning alpha on validation set."""
+    """Train one Ridge model per ICEEMDAN component with alpha tuning.
+ 
+    For each component (IMF or residue):
+        1. Normalize to [0,1] using training min/max
+        2. Create lag-6 supervised windows
+        3. Search alpha in [0.001, 0.005, 0.01, 0.05, 0.1, 0.2]
+           using validation RMSE to pick the best
+        4. Retrain final model with best alpha on training data
+ 
+    Handles IMF count mismatch between train and val: if train has more
+    components than val, extra components default to alpha=0.01.
+ 
+    Returns list of (model, scaler) tuples, one per component.
+    """
     from evaluate import rmse
 
     train_components = list(imfs) + [residue]
@@ -71,9 +96,16 @@ def train_decomposed_ridge(imfs, residue, val_imfs, val_residue, lag=6):
 
 
 def predict_decomposed_ridge(fitted, test_imfs, test_residue, lag=6):
-    """
-    Predict each test component with its Ridge model, sum to get final forecast.
-
+    """Predict each test component independently, then sum for final forecast.
+ 
+    Each component's model predicts in normalized space, then inverse-transforms
+    back to dollars. The final price forecast is the sum of all component
+    predictions (the paper's Stage 3: ensemble by addition).
+ 
+    Handles IMF count mismatch: if fitted has more models than test components,
+    extra models are skipped. If test has more components, extra components
+    are ignored.
+ 
     Returns (actual_prices, predicted_prices) in dollars.
     """
     test_components = list(test_imfs) + [test_residue]

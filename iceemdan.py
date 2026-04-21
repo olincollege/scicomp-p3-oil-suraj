@@ -5,10 +5,12 @@ Implements the Improved Complete Ensemble Empirical Mode Decomposition
 with Adaptive Noise (ICEEMDAN) algorithm from Torres et al. (2011),
 as applied in Li et al. (2019) for crude oil price forecasting.
 
-Decomposes a signal into Intrinsic Mode Functions which are oscillatory
-components from high-frequency noise to low-frequency trends with
-monotonic residue.
-
+Decomposes a nonlinear, nonstationary signal into a set of Intrinsic Mode
+Functions (IMFs) ordered from highest to lowest frequency, plus a monotonic
+residue capturing the long-term trend.
+ 
+Algorithm hierarchy:
+    find_extrema  make_envelopes   sift    emd   iceemdan
 """
 
 import numpy as np
@@ -16,7 +18,19 @@ from scipy.interpolate import CubicSpline
 
 
 def find_extrema(signal):
-   # Find local maxima and minima using vectorized NumPy comparison. Endpoints mirrored into both lists for spline boundary stability.
+    """Locate local maxima and minima via vectorized first-difference sign changes.
+ 
+    Uses np.diff to compute the derivative sign, then detects sign transitions:
+    negative change = local maximum, positive change = local minimum.
+    Flat segments are handled by forward-filling the last nonzero sign value.
+ 
+    Endpoints (index 0 and N-1) are appended to both lists to anchor the
+    cubic spline envelopes at the signal boundaries.
+ 
+    Returns:
+        maxima: int array of indices where local maxima occur
+        minima: int array of indices where local minima occur
+    """
     N = len(signal)
     d = np.diff(signal)
     sign_d = np.sign(d)
@@ -38,7 +52,14 @@ def find_extrema(signal):
 
 
 def make_envelopes(signal):
-    """Build upper/lower envelopes via cubic spline through extrema."""
+    """Construct upper and lower envelopes via cubic spline interpolation.
+ 
+    Fits a cubic spline through local maxima (upper envelope) and through
+    local minima (lower envelope). Their mean approximates the local trend
+    that sifting removes.
+ 
+    Raises ValueError if fewer than 2 extrema exist (monotonic signal).
+    """
     t = np.arange(len(signal))
     maxima, minima = find_extrema(signal)
 
@@ -52,8 +73,17 @@ def make_envelopes(signal):
 
 
 def sift(signal, max_iterations=100, threshold=1e-9):
-    """Extract one IMF by iteratively subtracting the mean envelope
-    until Cauchy convergence criterion is met."""
+    """Extract one IMF by iterative mean-envelope subtraction.
+ 
+    Repeatedly computes the mean of upper and lower envelopes and subtracts
+    it from the signal until the Cauchy convergence criterion is satisfied:
+        sum((h - h_next)^2) / sum(h^2) < threshold
+ 
+    Most signals converge in 10-30 iterations. The max_iterations ceiling
+    prevents infinite loops on pathological inputs.
+ 
+    Returns the extracted IMF (a zero-mean oscillatory component).
+    """
     h = signal.copy()
 
     for _ in range(max_iterations):
@@ -78,6 +108,14 @@ def sift(signal, max_iterations=100, threshold=1e-9):
 
 
 def emd(signal, max_imfs=11, max_sift_iter=100, sift_threshold=1e-9):
+    """Empirical Mode Decomposition — extract all IMFs from a signal.
+ 
+    Repeatedly sifts the residue to peel off one IMF at a time, ordered from
+    highest frequency to lowest. Terminates when the residue has fewer than
+    2 extrema (monotonic) or max_imfs components have been extracted.
+ 
+    Invariant: sum(imfs) + residue == signal (to machine precision).
+    """
     imfs = []
     residue = signal.copy()
 
@@ -95,13 +133,30 @@ def emd(signal, max_imfs=11, max_sift_iter=100, sift_threshold=1e-9):
 
 def iceemdan(signal, max_imfs=11, noise_std=0.08, n_realizations=500,
              max_sift_iter=100, sift_threshold=1e-9, seed=42):
-    """
-    ICEEMDAN decomposition.
-
-    Adds noise at each decomposition stage, sifts each noisy version,
-    and averages the results across n_realizations to reduce mode mixing.
-
-    Parameters: noise_std=0.08, n_realizations=500 (from Li et al. 2019).
+    """Improved Complete Ensemble EMD with Adaptive Noise.
+ 
+    Wraps EMD with noise averaging to eliminate mode mixing. At each
+    decomposition stage k:
+        1. Add the k-th pre-decomposed noise IMF to the current residue
+        2. Sift the perturbed signal to extract a candidate IMF
+        3. Repeat for all N noise realizations
+        4. Average the N candidates to produce the final IMF k
+ 
+    The averaging cancels noise artifacts while preserving real structure.
+    More realizations = cleaner decomposition but longer runtime.
+ 
+    Parameters (defaults match paper Table 1):
+        signal:          1D price array (e.g. 5,338 training days)
+        max_imfs:        cap on extracted components (paper: 11)
+        noise_std:       noise level as fraction of signal std (paper: 0.05)
+        n_realizations:  noise trials to average (paper: 500)
+        max_sift_iter:   sifting iteration ceiling (paper: 5000)
+        sift_threshold:  Cauchy convergence criterion (1e-9)
+        seed:            random seed for reproducibility
+ 
+    Returns:
+        imfs:    2D array (n_imfs, signal_length), high-freq first
+        residue: 1D array, the monotonic trend
     """
     rng = np.random.default_rng(seed)
     N = len(signal)
