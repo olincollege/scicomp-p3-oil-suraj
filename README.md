@@ -1,4 +1,7 @@
 # WTI Crude Oil Price Forecasting via From-Scratch ICEEMDAN
+
+![ICEEMDAN Decomposition of WTI Crude Oil Prices](readmeimages/decomposition.jpg)
+
 Prelemimnary README.
 
 # scicomp-p3-oil-suraj
