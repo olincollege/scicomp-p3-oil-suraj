@@ -18,6 +18,12 @@ import os
 
 
 def _download_wti(csv_path="data/DCOILWTICO.csv"):
+    """Auto-download WTI prices from GitHub mirror or FRED.
+ 
+    Tries the GitHub datasets mirror first (faster, no auth), then
+    falls back to FRED's direct CSV export. Normalizes GitHub's column
+    format (Date,Price) to match FRED's (DATE,DCOILWTICO).
+    """
     import urllib.request
 
     os.makedirs(os.path.dirname(csv_path) or ".", exist_ok=True)
@@ -94,6 +100,12 @@ def split_data(prices, train_frac=0.8, val_frac=0.2):
 
 
 class MinMaxScaler:
+    """Scale values to [0, 1] using training min/max (paper Equation 21).
+ 
+    Fits on training data, then transforms train/val/test using the same
+    parameters. Test data may fall outside [0, 1] if it exceeds the
+    training range — this is expected and correct.
+    """
 
     def __init__(self):
         self.x_min = None
