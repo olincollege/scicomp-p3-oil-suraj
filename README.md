@@ -1,6 +1,6 @@
 # WTI Crude Oil Price Forecasting via From-Scratch ICEEMDAN
-[ICEEMDAN Decomposition of WTI Crude Oil Prices]
-(readmeimages\comparison.png)
+
+![ICEEMDAN Decomposition of WTI Crude Oil Prices](readmeimages/decomposition.png)
 
 Prelemimnary README.
 
@@ -77,7 +77,7 @@ python tests/test_iceemdan.py && python tests/test_data.py && python tests/test_
 ## Results
 
 ### Benchmark (Horizon 1, 1-day ahead)
-
+![Model Performance Comparison](readmeimages/comparison.png)
 | Model | MAPE | RMSE | vs Random Walk |
 |---|---|---|---|
 | Random Walk | 1.5293% | 1.2432 | baseline |
@@ -86,6 +86,13 @@ python tests/test_iceemdan.py && python tests/test_data.py && python tests/test_
 | ICEEMDAN+RR (paper Table 4, n=500) | 0.43% | 0.3458 | 72.4% better |
 
 We are within 0.05 percentage points of the paper's MAPE and within 0.05 of their RMSE, using 10x fewer realizations and a 6-value grid search instead of Differential Evolution.
+
+
+### Forecast Visualizations
+
+![Raw Ridge Forecast vs Actual](readmeimages/forecast_raw.png)
+
+![ICEEMDAN + Ridge Forecast vs Actual](readmeimages/forecast_iceemdan.png)
 
 ### Per-Component Alpha Selection
 
