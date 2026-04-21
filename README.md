@@ -216,10 +216,3 @@ scicomp-p3-oil-suraj/
 | normalization | min-max [0,1] | min-max [0,1] |
 | train/val/test | 5338/1335/1669 | 5338/1335/1669 |
 
-## References
-
-- Li, T., Zhou, Y., Li, X., Wu, J., & He, T. (2019). Forecasting Daily Crude Oil Prices Using Improved CEEMDAN and Ridge Regression-Based Predictors. *Energies*, 12(19), 3603.
-- Torres, M.E., Colominas, M.A., Schlotthauer, G., & Flandrin, P. (2011). A complete ensemble empirical mode decomposition with adaptive noise. *ICASSP*, 4144-4147.
-- Colominas, M.A., Schlotthauer, G., & Torres, M.E. (2014). Improved complete ensemble EMD: A suitable tool for biomedical signal processing. *Biomedical Signal Processing and Control*, 14, 19-29.
-- Huang, N.E., Shen, Z., & Long, S.R. (1999). A new view of nonlinear water waves: the Hilbert Spectrum. *Annual Review of Fluid Mechanics*, 31, 417-457.
-- Wu, Z. & Huang, N.E. (2009). Ensemble empirical mode decomposition: A noise-assisted data analysis method. *Advances in Adaptive Data Analysis*, 1(1), 1-41.
